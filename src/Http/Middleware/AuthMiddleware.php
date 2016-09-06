@@ -4,6 +4,7 @@ namespace Larabros\Elogram\Http\Middleware;
 
 use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\RequestInterface;
+use League\OAuth2\Client\Token\AccessToken;
 
 /**
  * A middleware class for authenticating requests made to Instagram's API.
@@ -29,11 +30,17 @@ final class AuthMiddleware extends AbstractMiddleware
         ) {
             return $next($request, $options);
         }
+        
+        $accessToken = $this->config->get('access_token');
+        
+        if (!($accessToken instanceof AccessToken)) {
+            $accessToken = new AccessToken(json_decode($accessToken, true));
+        }
 
         $uri = Uri::withQueryValue(
             $request->getUri(),
             'access_token',
-            $this->config->get('access_token')->getToken()
+            $accessToken->getToken()
         );
 
         return parent::__invoke(
